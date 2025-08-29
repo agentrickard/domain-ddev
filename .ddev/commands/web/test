@@ -1,9 +1,10 @@
 #!/bin/bash
 
 ## Description: Run tests on a specific module.
-## Usage: test MODULE_NAME {TEST_TYPE} {TEST CLASS}
+## Usage: test MODULE_NAME {TEST CLASS} {BASE_URL}
 ## Example: "ddev test admin_toolbar"
-## Example: "ddev test admin_toolbar Functional AdminToolbarAdminMenuTest"
+## Example: "ddev test admin_toolbar AdminToolbarAdminMenuTest"
+## Example: "ddev test domain DomainConfigPageCacheTest http://one.example.local"
 
 if [ $# -eq 0 ]
 then
@@ -32,18 +33,22 @@ then
 fi
 
 CONFIG='/var/www/html/phpunit.xml'
+TEST_FILE=`find . -type f -name $2.php`
+BASE_URL=${3:-http://example.local}
 
-if [ ! -z $3 ] && [ -f "web/modules/contrib/$1/tests/src/$2/$3.php" ]
+echo $BASE_URL
+
+if [ ! -z $2 ] && [ ! -z $TEST_FILE ]
 then
   echo "============="
-  echo "Running test: /web/modules/contrib/$1/$2/$3"
+  echo "Running test: $TEST_FILE"
   echo "============="
-  vendor/bin/phpunit -c "$CONFIG" --testdox "web/modules/contrib/$1/tests/src/$2/$3.php"
+  SIMPLETEST_BASE_URL="$BASE_URL" vendor/bin/phpunit -c "$CONFIG" --testdox "$TEST_FILE"
 else
   echo "======================"
   echo "Running tests against: /web/modules/contrib/$1"
   echo "======================"
-  vendor/bin/phpunit -c "$CONFIG" --testdox "web/modules/contrib/$1"
+  SIMPLETEST_BASE_URL="$BASE_URL" vendor/bin/phpunit -c "$CONFIG" --testdox "web/modules/contrib/$1"
 fi
 
 echo "-- When you are finished, run 'ddev cleanup' to remove test files."
